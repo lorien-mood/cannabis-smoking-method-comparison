@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cannabis Smoking Method Comparison Tool | Mood</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       MOOD WIDGET DESIGN SYSTEM
+       Typography: Playfair Display (headers), DM Sans (body)
+       Primary: #1B3A2F | Card bg: #F8F6F2 | Page bg: #FFFFFF
+       Border radius: 20px (card), 12px (inner), 10px (small)
+       ============================================================ */
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #FFFFFF;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    * { box-sizing: border-box; }
+
+    .widget-wrapper {
+      width: 100%;
+      max-width: 580px;
+      margin: 0 auto;
+      padding: 24px 16px;
+    }
+
+    .widget-card {
+      background: #FFFFFF;
+      border-radius: 20px;
+      border: 1px solid rgba(27,58,47,0.08);
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(27,58,47,0.06), 0 1px 4px rgba(27,58,47,0.04);
+    }
+
+    /* --- Header --- */
+    .widget-header {
+      padding: 28px 28px 20px;
+      text-align: center;
+    }
+    .widget-header h2 {
+      font-family: 'Playfair Display', Georgia, serif;
+      color: #1B3A2F;
+      font-size: 22px;
+      font-weight: 700;
+      margin: 0 0 6px;
+      letter-spacing: -0.3px;
+    }
+    .widget-header p {
+      color: #7A8B82;
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* --- Method selector chips --- */
+    .method-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 20px 20px;
+    }
+    .method-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(27,58,47,0.1);
+      background: transparent;
+      color: #7A8B82;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .method-chip:hover {
+      border-color: rgba(27,58,47,0.25);
+      color: #4A5D53;
+    }
+    .method-chip.active {
+      background: rgba(27,58,47,0.08);
+      border-color: rgba(27,58,47,0.2);
+      color: #1B3A2F;
+    }
+    .chip-icon {
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    /* --- Main content area --- */
+    .widget-body {
+      padding: 0 28px 28px;
+    }
+
+    /* --- Radar chart --- */
+    .radar-container {
+      position: relative;
+      width: 100%;
+      max-width: 340px;
+      margin: 0 auto 24px;
+    }
+    .radar-container canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* --- Legend --- */
+    .radar-legend {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4A5D53;
+    }
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    /* --- Detail cards (shown for selected methods) --- */
+    .detail-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .detail-card {
+      background: #F8F6F2;
+      border: 1px solid rgba(27,58,47,0.05);
+      border-radius: 12px;
+      padding: 18px;
+      transition: all 0.4s ease;
+    }
+    .detail-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .detail-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+    .detail-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1B3A2F;
+      flex: 1;
+    }
+    .detail-intensity-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Stat bars within detail cards */
+    .detail-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .mini-stat {
+      text-align: center;
+    }
+    .mini-stat-label {
+      color: #A0ADA6;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .mini-bar-track {
+      height: 5px;
+      background: rgba(27,58,47,0.06);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 3px;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    }
+    .mini-stat-val {
+      color: #1B3A2F;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Product recommendation row */
+    .detail-product {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: #FFFFFF;
+      border: 1px solid rgba(27,58,47,0.06);
+      border-radius: 10px;
+    }
+    .product-label {
+      color: #A0ADA6;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .product-name {
+      color: #1B3A2F;
+      font-size: 13px;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    /* --- Empty state --- */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #A0ADA6;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .empty-state-icon {
+      font-size: 32px;
+      margin-bottom: 10px;
+    }
+
+    /* --- Footer note --- */
+    .widget-footer {
+      background: #F8F6F2;
+      border: 1px solid rgba(27,58,47,0.06);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .footer-icon {
+      font-size: 18px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .footer-text {
+      color: #4A5D53;
+      font-size: 12px;
+      line-height: 1.55;
+      margin: 0;
+    }
+    .footer-text strong {
+      color: #1B3A2F;
+    }
+
+    /* --- Mobile (420px) --- */
+    @media (max-width: 420px) {
+      .widget-header h2 { font-size: 19px; }
+      .method-chip { padding: 6px 11px; font-size: 12px; }
+      .widget-body { padding: 0 18px 22px; }
+      .radar-container { max-width: 280px; }
+      .detail-stats { gap: 5px; }
+      .detail-card { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget-wrapper">
+    <div class="widget-card">
+
+      <!-- Header -->
+      <div class="widget-header">
+        <h2>Smoking Method Comparison</h2>
+        <p>Select two or more methods to compare across six dimensions</p>
+      </div>
+
+      <!-- Method selector chips -->
+      <div class="method-chips" id="methodChips"></div>
+
+      <!-- Main body -->
+      <div class="widget-body">
+
+        <!-- Radar chart -->
+        <div class="radar-container">
+          <canvas id="radarCanvas" width="680" height="680"></canvas>
+        </div>
+
+        <!-- Legend (dynamic) -->
+        <div class="radar-legend" id="radarLegend"></div>
+
+        <!-- Detail cards -->
+        <div id="detailArea"></div>
+
+        <!-- Footer -->
+        <div class="widget-footer">
+          <span class="footer-icon">🌿</span>
+          <p class="footer-text">
+            Ratings are relative comparisons across methods. Individual
+            experiences vary based on the specific product, THC amount,
+            and personal tolerance.
+            <strong>All Mood products are third-party lab tested.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===========================================================
+       DATA - from the article's static fallback table
+       Each dimension rated 1-5.
+       Product recommendations from "Mood Products by Smoking Method" table.
+       =========================================================== */
+
+    var methods = [
+      {
+        id: "joint",
+        name: "Joint",
+        icon: "\uD83D\uDCDC",  /* scroll emoji */
+        onset: 3, intensity: 3, flavor: 3,
+        discretion: 1, beginner: 4, cost: 1,
+        onsetText: "1 to 5 min",
+        intensityText: "Moderate",
+        product: "Mood THCa Pre-Rolls / Mood THCa Flower",
+        color: "#2A5C47",
+        colorLight: "rgba(42,92,71,0.15)"
+      },
+      {
+        id: "blunt",
+        name: "Blunt",
+        icon: "\uD83C\uDF2F",  /* burrito / wrap emoji */
+        onset: 3, intensity: 4, flavor: 2,
+        discretion: 1, beginner: 3, cost: 1,
+        onsetText: "1 to 5 min",
+        intensityText: "Moderate to Strong",
+        product: "Mood THCa Flower",
+        color: "#3E7A5F",
+        colorLight: "rgba(62,122,95,0.15)"
+      },
+      {
+        id: "pipe",
+        name: "Pipe",
+        icon: "\uD83E\uDE78",  /* bubble pipe */
+        onset: 4, intensity: 3, flavor: 3,
+        discretion: 2, beginner: 5, cost: 1,
+        onsetText: "1 to 3 min",
+        intensityText: "Moderate",
+        product: "Mood THCa Flower",
+        color: "#1B7A6A",
+        colorLight: "rgba(27,122,106,0.15)"
+      },
+      {
+        id: "bong",
+        name: "Bong",
+        icon: "\uD83E\uDDEA",  /* test tube / glass */
+        onset: 4, intensity: 4, flavor: 3,
+        discretion: 1, beginner: 3, cost: 3,
+        onsetText: "1 to 3 min",
+        intensityText: "Strong",
+        product: "Mood THCa Flower",
+        color: "#D4A04A",
+        colorLight: "rgba(212,160,74,0.15)"
+      },
+      {
+        id: "vaporizer",
+        name: "Vaporizer",
+        icon: "\uD83D\uDCA8",  /* dash / vapor */
+        onset: 4, intensity: 4, flavor: 5,
+        discretion: 5, beginner: 5, cost: 2,
+        onsetText: "1 to 3 min",
+        intensityText: "Moderate to Strong",
+        product: "Mood THCa Disposable Vapes",
+        color: "#1B3A2F",
+        colorLight: "rgba(27,58,47,0.12)"
+      },
+      {
+        id: "dab",
+        name: "Dab",
+        icon: "\uD83D\uDD25",  /* fire */
+        onset: 5, intensity: 5, flavor: 4,
+        discretion: 3, beginner: 1, cost: 5,
+        onsetText: "Under 1 min",
+        intensityText: "Very Strong",
+        product: "Mood THCa Moonrocks / Mood THCa Diamonds",
+        color: "#A66B2E",
+        colorLight: "rgba(166,107,46,0.15)"
+      }
+    ];
+
+    var dimensions = [
+      { key: "onset",     label: "Speed of Onset" },
+      { key: "intensity", label: "Intensity" },
+      { key: "flavor",    label: "Flavor" },
+      { key: "discretion",label: "Discretion" },
+      { key: "beginner",  label: "Beginner\nFriendliness" },
+      { key: "cost",      label: "Cost\n(1 = cheapest)" }
+    ];
+
+    /* Track which methods are selected */
+    var selected = ["joint", "vaporizer"];  /* default selection */
+
+    /* ===========================================================
+       BUILD CHIPS
+       =========================================================== */
+    function buildChips() {
+      var container = document.getElementById("methodChips");
+      container.innerHTML = "";
+      methods.forEach(function(m) {
+        var btn = document.createElement("button");
+        btn.className = "method-chip" + (selected.indexOf(m.id) !== -1 ? " active" : "");
+        btn.innerHTML = '<span class="chip-icon">' + m.icon + "</span>" + m.name;
+        btn.setAttribute("data-id", m.id);
+        btn.addEventListener("click", function() {
+          toggleMethod(m.id);
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function toggleMethod(id) {
+      var idx = selected.indexOf(id);
+      if (idx !== -1) {
+        /* Don't allow deselecting if only 1 remains */
+        if (selected.length <= 1) return;
+        selected.splice(idx, 1);
+      } else {
+        selected.push(id);
+      }
+      updateAll();
+    }
+
+    /* ===========================================================
+       RADAR CHART (Canvas)
+       =========================================================== */
+    function drawRadar() {
+      var canvas = document.getElementById("radarCanvas");
+      var ctx = canvas.getContext("2d");
+      var W = canvas.width;
+      var H = canvas.height;
+      var cx = W / 2;
+      var cy = H / 2;
+      var maxR = Math.min(cx, cy) - 80;
+      var levels = 5;
+      var n = dimensions.length;
+      var angleStep = (2 * Math.PI) / n;
+      var startAngle = -Math.PI / 2;  /* 12 o'clock */
+
+      ctx.clearRect(0, 0, W, H);
+
+      /* Grid circles */
+      for (var lv = 1; lv <= levels; lv++) {
+        var r = (maxR / levels) * lv;
+        ctx.beginPath();
+        for (var i = 0; i <= n; i++) {
+          var a = startAngle + i * angleStep;
+          var x = cx + r * Math.cos(a);
+          var y = cy + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = "rgba(27,58,47,0.07)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      /* Axis lines */
+      for (var i = 0; i < n; i++) {
+        var a = startAngle + i * angleStep;
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(cx + maxR * Math.cos(a), cy + maxR * Math.sin(a));
+        ctx.strokeStyle = "rgba(27,58,47,0.06)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      /* Axis labels */
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.font = "600 22px 'DM Sans', sans-serif";
+      ctx.fillStyle = "#4A5D53";
+      for (var i = 0; i < n; i++) {
+        var a = startAngle + i * angleStep;
+        var labelR = maxR + 48;
+        var lx = cx + labelR * Math.cos(a);
+        var ly = cy + labelR * Math.sin(a);
+        var lines = dimensions[i].label.split("\n");
+        lines.forEach(function(line, li) {
+          ctx.fillText(line, lx, ly + (li - (lines.length - 1) / 2) * 24);
+        });
+      }
+
+      /* Draw data polygons for each selected method */
+      var selectedMethods = methods.filter(function(m) {
+        return selected.indexOf(m.id) !== -1;
+      });
+
+      selectedMethods.forEach(function(m) {
+        ctx.beginPath();
+        for (var i = 0; i < n; i++) {
+          var a = startAngle + i * angleStep;
+          var val = m[dimensions[i].key];
+          var r = (maxR / levels) * val;
+          var x = cx + r * Math.cos(a);
+          var y = cy + r * Math.sin(a);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.fillStyle = m.colorLight;
+        ctx.fill();
+        ctx.strokeStyle = m.color;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        /* Data points */
+        for (var i = 0; i < n; i++) {
+          var a = startAngle + i * angleStep;
+          var val = m[dimensions[i].key];
+          var r = (maxR / levels) * val;
+          var x = cx + r * Math.cos(a);
+          var y = cy + r * Math.sin(a);
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = m.color;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, 2 * Math.PI);
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fill();
+        }
+      });
+    }
+
+    /* ===========================================================
+       LEGEND
+       =========================================================== */
+    function buildLegend() {
+      var container = document.getElementById("radarLegend");
+      container.innerHTML = "";
+      var selectedMethods = methods.filter(function(m) {
+        return selected.indexOf(m.id) !== -1;
+      });
+      selectedMethods.forEach(function(m) {
+        var item = document.createElement("div");
+        item.className = "legend-item";
+        item.innerHTML = '<span class="legend-swatch" style="background:' +
+          m.color + '"></span>' + m.name;
+        container.appendChild(item);
+      });
+    }
+
+    /* ===========================================================
+       DETAIL CARDS
+       =========================================================== */
+
+    /* Intensity color grading: green > gold > amber > red */
+    function getIntensityStyle(val) {
+      if (val <= 2) return { bg: "rgba(27,58,47,0.08)", color: "#1B3A2F" };
+      if (val <= 3) return { bg: "rgba(42,92,71,0.08)", color: "#2A5C47" };
+      if (val <= 4) return { bg: "rgba(212,160,74,0.1)", color: "#7A6832" };
+      return { bg: "rgba(166,107,46,0.1)", color: "#A66B2E" };
+    }
+
+    function buildDetails() {
+      var area = document.getElementById("detailArea");
+
+      var selectedMethods = methods.filter(function(m) {
+        return selected.indexOf(m.id) !== -1;
+      });
+
+      if (selectedMethods.length === 0) {
+        area.innerHTML =
+          '<div class="empty-state">' +
+            '<div class="empty-state-icon">👆</div>' +
+            'Select at least one method above to see details' +
+          '</div>';
+        return;
+      }
+
+      var html = '<div class="detail-cards">';
+      selectedMethods.forEach(function(m) {
+        var iStyle = getIntensityStyle(m.intensity);
+
+        /* Build mini-bar rows for the 6 dimensions */
+        var barsHtml = "";
+        var dims = [
+          { key: "onset",     label: "Onset" },
+          { key: "intensity", label: "Intensity" },
+          { key: "flavor",    label: "Flavor" },
+          { key: "discretion",label: "Discretion" },
+          { key: "beginner",  label: "Beginner" },
+          { key: "cost",      label: "Cost" }
+        ];
+
+        /* Show top 3 most relevant stats in the grid: onset, intensity, discretion */
+        var topDims = [
+          { key: "onset",     label: "Onset Speed" },
+          { key: "discretion",label: "Discretion" },
+          { key: "beginner",  label: "Beginner Friendly" }
+        ];
+        var statsHtml = '<div class="detail-stats">';
+        topDims.forEach(function(d) {
+          var v = m[d.key];
+          var pct = (v / 5 * 100);
+          statsHtml +=
+            '<div class="mini-stat">' +
+              '<div class="mini-stat-label">' + d.label + '</div>' +
+              '<div class="mini-bar-track">' +
+                '<div class="mini-bar-fill" style="width:' + pct +
+                '%;background:' + m.color + '"></div>' +
+              '</div>' +
+              '<div class="mini-stat-val">' + v + ' / 5</div>' +
+            '</div>';
+        });
+        statsHtml += '</div>';
+
+        html +=
+          '<div class="detail-card">' +
+            '<div class="detail-top">' +
+              '<span class="detail-icon">' + m.icon + '</span>' +
+              '<span class="detail-name">' + m.name + '</span>' +
+              '<span class="detail-intensity-badge" style="background:' +
+                iStyle.bg + ';color:' + iStyle.color + '">' +
+                m.intensityText + '</span>' +
+            '</div>' +
+            statsHtml +
+            '<div class="detail-product">' +
+              '<span class="product-label">Mood Pick</span>' +
+              '<span class="product-name">' + m.product + '</span>' +
+            '</div>' +
+          '</div>';
+      });
+
+      html += '</div>';
+      area.innerHTML = html;
+    }
+
+    /* ===========================================================
+       UPDATE EVERYTHING
+       =========================================================== */
+    function updateAll() {
+      /* Update chip states */
+      var chips = document.querySelectorAll(".method-chip");
+      chips.forEach(function(chip) {
+        var id = chip.getAttribute("data-id");
+        if (selected.indexOf(id) !== -1) {
+          chip.classList.add("active");
+        } else {
+          chip.classList.remove("active");
+        }
+      });
+      drawRadar();
+      buildLegend();
+      buildDetails();
+    }
+
+    /* ===========================================================
+       INIT
+       =========================================================== */
+    buildChips();
+    updateAll();
+
+    /* Redraw on resize for responsive canvas */
+    window.addEventListener("resize", function() {
+      drawRadar();
+    });
+  </script>
+</body>
+</html>
